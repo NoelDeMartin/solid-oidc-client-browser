@@ -7,6 +7,7 @@ import { SessionIDB } from './SessionDatabase';
 // Any provided database via SessionOptions will be ignored.
 // Database will be an IndexedDB.
 export interface WebWorkerSessionOptions extends SessionOptions {
+    name?: string;
     workerUrl?: string | URL;
 }
 
@@ -20,13 +21,14 @@ export class WebWorkerSession extends SessionCore {
         clientDetails?: DereferencableIdClientDetails | DynamicRegistrationClientDetails,
         sessionOptions?: WebWorkerSessionOptions
     ) {
-        const database = new SessionIDB();
+        const name = sessionOptions?.name;
+        const database = new SessionIDB(name);
         const options = { ...sessionOptions, database };
         super(clientDetails, options);
 
         // Allow consumer to provide worker URL, or use default
         const workerUrl = sessionOptions?.workerUrl ?? getWorkerUrl()
-        this.worker = new SharedWorker(workerUrl, { type: 'module' });
+        this.worker = new SharedWorker(workerUrl, { type: 'module', ...(name && { name }) });
         this.worker.port.onmessage = (event) => {
             this.handleWorkerMessage(event.data).catch(console.error);
         };

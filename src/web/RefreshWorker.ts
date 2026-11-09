@@ -6,6 +6,7 @@ import { SessionDatabase } from "../core/SessionDatabase";
 import { RefreshMessageTypes } from "./RefreshMessageTypes";
 
 interface SharedWorker { // to make tsc happy
+    name: string;
     onconnect: (event: MessageEvent) => void;
 }
 declare const self: SharedWorker; // to make tsc happy
@@ -25,7 +26,7 @@ self.onconnect = (event: MessageEvent) => {
     ports.add(port);
     // lazy init
     if (!refresher) {
-        refresher = new Refresher(broadcast, new SessionIDB());
+        refresher = new Refresher(broadcast, new SessionIDB(self.name || undefined));
     }
     // handle messages
     port.onmessage = (event: MessageEvent) => {
